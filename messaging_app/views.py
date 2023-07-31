@@ -1,10 +1,9 @@
 from rest_framework.authtoken.models import Token
 from rest_framework.authtoken.views import ObtainAuthToken
-from rest_framework.generics import CreateAPIView
 from rest_framework.response import Response
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
-from rest_framework import status
+
 from messaging_app.permissions import IsSenderOrReceiver
 from .models import Message
 from .serializers import MessageSerializer, UserRegistrationSerializer
@@ -18,21 +17,9 @@ class CustomAuthToken(ObtainAuthToken):
     permission_classes = [AllowAny]  
     
     def post(self, request, *args, **kwargs):
-        
-        # Get the username and password from the request data
-        username = request.data.get('username')
-        password = request.data.get('password')
-        user_condition = Q(username=username) & Q(password=password)
-
-        # Check if a user exists
-        try:
-            user = User.objects.get(user_condition)
-            token, created = Token.objects.get_or_create(user=user)
-            return Response({'token': token.key})
-        except User.DoesNotExist:
-            return Response({'detail': 'User does not exist.'}, status=status.HTTP_404_NOT_FOUND)
-
-
+        response = super().post(request, *args, **kwargs)
+        token = Token.objects.get(user=request.user)
+        return Response({'token': token.key})
 
 class MessageList(generics.ListCreateAPIView):
     serializer_class = MessageSerializer
@@ -87,8 +74,8 @@ class MessageDetail(generics.RetrieveUpdateDestroyAPIView):
         
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
-    
-class UserRegistrationView(CreateAPIView):
-    permission_classes = [AllowAny]
+
+class UserRegistrationView(generics.CreateAPIView):
+    queryset = User.objects.all()
     serializer_class = UserRegistrationSerializer
-    
+    permission_classes = [AllowAny]

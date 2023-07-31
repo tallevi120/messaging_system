@@ -1,9 +1,10 @@
 from rest_framework.authtoken.models import Token
-from rest_framework.authtoken.views import APIView
+from rest_framework.authtoken.views import ObtainAuthToken
+from rest_framework.generics import CreateAPIView
 from rest_framework.response import Response
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
-
+from rest_framework import status
 from messaging_app.permissions import IsSenderOrReceiver
 from .models import Message
 from .serializers import MessageSerializer, UserRegistrationSerializer
@@ -13,22 +14,21 @@ from rest_framework.permissions import AllowAny
 from django.db.models import Q
 from django.core.exceptions import ValidationError
 
-class CustomAuthToken(APIView):
+class CustomAuthToken(ObtainAuthToken):
     permission_classes = [AllowAny]  
     
     def post(self, request, *args, **kwargs):
-        # Call ObtainAuthToken's post method to get the token for existing users
-        response = super().post(request, *args, **kwargs)
-        if response.status_code == 200:
-            # If the user already exists, return the existing token
-            return response
-
-        # If the provided credentials are valid and the user does not exist, create a new user and return the token
-        serializer = UserRegistrationSerializer(data=request.data)
+        serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
-        user = serializer.save()
-        token, created = Token.objects.get_or_create(user=user)
-        return Response({'token': token.key, 'user_id': user.id})
+        username = serializer.validated_data['username']
+        password = serializer.validated_data['password']
+
+        try:
+            user = User.objects.get(username=username)
+            token, created = Token.objects.get_or_create(user=user)
+            return Response({'token': token.key})
+        except User.DoesNotExist:
+            return Response({'detail': 'User does not exist.'}, status=status.HTTP_404_NOT_FOUND)
 
 class MessageList(generics.ListCreateAPIView):
     serializer_class = MessageSerializer
@@ -83,4 +83,8 @@ class MessageDetail(generics.RetrieveUpdateDestroyAPIView):
         
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
+    
+class UserRegistrationView(CreateAPIView):
+    permission_classes = [AllowAny]
+    serializer_class = UserRegistrationSerializer
     

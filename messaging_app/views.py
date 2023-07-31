@@ -18,17 +18,21 @@ class CustomAuthToken(ObtainAuthToken):
     permission_classes = [AllowAny]  
     
     def post(self, request, *args, **kwargs):
-        serializer = self.serializer_class(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        username = serializer.validated_data['username']
-        password = serializer.validated_data['password']
+        
+        # Get the username and password from the request data
+        username = request.data.get('username')
+        password = request.data.get('password')
+        user_condition = Q(username=username) & Q(password=password)
 
+        # Check if a user exists
         try:
-            user = User.objects.get(username=username)
+            user = User.objects.get(user_condition)
             token, created = Token.objects.get_or_create(user=user)
             return Response({'token': token.key})
         except User.DoesNotExist:
             return Response({'detail': 'User does not exist.'}, status=status.HTTP_404_NOT_FOUND)
+
+
 
 class MessageList(generics.ListCreateAPIView):
     serializer_class = MessageSerializer

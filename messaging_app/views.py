@@ -28,7 +28,7 @@ class CustomAuthToken(ObtainAuthToken):
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
         token, created = Token.objects.get_or_create(user=user)
-        return Response({'token': token.key})
+        return Response({'token': token.key, 'user_id': user.id})
 
 class MessageList(generics.ListCreateAPIView):
     serializer_class = MessageSerializer
@@ -84,7 +84,3 @@ class MessageDetail(generics.RetrieveUpdateDestroyAPIView):
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
     
-class UserRegistrationView(generics.CreateAPIView):
-    queryset = User.objects.all()
-    serializer_class = UserRegistrationSerializer
-    permission_classes = [AllowAny]

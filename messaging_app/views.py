@@ -17,8 +17,17 @@ class CustomAuthToken(ObtainAuthToken):
     permission_classes = [AllowAny]  
     
     def post(self, request, *args, **kwargs):
+        # Call ObtainAuthToken's post method to get the token for existing users
         response = super().post(request, *args, **kwargs)
-        token = Token.objects.get(user=request.user)
+        if response.status_code == 200:
+            # If the user already exists, return the existing token
+            return response
+
+        # If the provided credentials are valid, create a new user and return the token
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.validated_data['user']
+        token, created = Token.objects.get_or_create(user=user)
         return Response({'token': token.key})
 
 class MessageList(generics.ListCreateAPIView):
@@ -74,8 +83,3 @@ class MessageDetail(generics.RetrieveUpdateDestroyAPIView):
         
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
-
-class UserRegistrationView(generics.CreateAPIView):
-    queryset = User.objects.all()
-    serializer_class = UserRegistrationSerializer
-    permission_classes = [AllowAny]

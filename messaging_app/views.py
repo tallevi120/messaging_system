@@ -23,10 +23,10 @@ class CustomAuthToken(ObtainAuthToken):
             # If the user already exists, return the existing token
             return response
 
-        # If the provided credentials are valid, create a new user and return the token
-        serializer = self.serializer_class(data=request.data)
+        # If the provided credentials are valid and the user does not exist, create a new user and return the token
+        serializer = UserRegistrationSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        user = serializer.validated_data['user']
+        user = serializer.save()
         token, created = Token.objects.get_or_create(user=user)
         return Response({'token': token.key})
 

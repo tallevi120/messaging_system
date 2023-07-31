@@ -6,7 +6,7 @@ from rest_framework.permissions import IsAuthenticated
 
 from messaging_app.permissions import IsSenderOrReceiver
 from .models import Message
-from .serializers import MessageSerializer, UserRegistrationSerializer
+from .serializers import MessageSerializer
 from django.contrib.auth.models import User
 from rest_framework import serializers
 from rest_framework.permissions import AllowAny
@@ -74,8 +74,3 @@ class MessageDetail(generics.RetrieveUpdateDestroyAPIView):
         
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
-
-class UserRegistrationView(generics.CreateAPIView):
-    queryset = User.objects.all()
-    serializer_class = UserRegistrationSerializer
-    permission_classes = [AllowAny]

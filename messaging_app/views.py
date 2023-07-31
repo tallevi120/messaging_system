@@ -14,6 +14,8 @@ from django.db.models import Q
 from django.core.exceptions import ValidationError
 
 class CustomAuthToken(ObtainAuthToken):
+    permission_classes = [AllowAny]  
+    
     def post(self, request, *args, **kwargs):
         response = super().post(request, *args, **kwargs)
         token = Token.objects.get(user=request.user)

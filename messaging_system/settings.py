@@ -133,3 +133,4 @@ REST_FRAMEWORK = {
     ),
 }
 
+SECURE_SSL_REDIRECT = True

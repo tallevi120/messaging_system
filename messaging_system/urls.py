@@ -21,7 +21,7 @@ from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/', include('messaging_app.urls')),  # Change the app name in the include
+    path('api/', include('messaging_app.urls')), 
     path('api-token-auth/', obtain_auth_token, name='api_token_auth'),  # For obtaining the token
 ]
 
